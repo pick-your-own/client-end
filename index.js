@@ -175,5 +175,5 @@ socket.on('dungeonResults', (payload) => {
     console.log('RESULTS:', payload.result);
     console.log('LOOT:', payload.loot);
   }, 1000);
-  socket.emit('dungeonFinish', payload);
+  socket.emit('leaveChat', payload);
 });
