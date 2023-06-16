@@ -6,7 +6,7 @@ require('dotenv').config({ path: '../.env' });
 const io = require('socket.io-client');
 const inquirer = require('inquirer');
 const mongoose = require('mongoose');
-const socket = io('http://localhost:4000');
+const socket = io('https://dh-prod.onrender.com');
 const { User } = require('../src/models/User');
 const readline = require('readline');
 
