@@ -119,6 +119,7 @@ socket.on('dungeonMenu', (payload) => {
         { name: 'Easy', value: 1 },
         { name: 'Normal', value: 2 },
         { name: 'Hard', value: 3 },
+        { name: 'Back to menu', value: 4 },
       ],
     },
   ])
@@ -138,7 +139,11 @@ socket.on('dungeonMenu', (payload) => {
         console.log('Selected hard');
         socket.emit('dungeonLogic', payload);
         break;
+      case 4:
+        console.log('Sending back to menu');
+        socket.emit('leaveDungeon', payload);
       }
+
 
     });
 });
@@ -175,5 +180,5 @@ socket.on('dungeonResults', (payload) => {
     console.log('RESULTS:', payload.result);
     console.log('LOOT:', payload.loot);
   }, 1000);
-  socket.emit('leaveChat', payload);
+  socket.emit('dungeonFinish', payload);
 });
