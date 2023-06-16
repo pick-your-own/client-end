@@ -2,11 +2,12 @@
 
 'use strict';
 
+//https://dh-prod.onrender.com
 require('dotenv').config({ path: '../.env' });
 const io = require('socket.io-client');
 const inquirer = require('inquirer');
 const mongoose = require('mongoose');
-const socket = io('http://localhost:4000');
+const socket = io('https://dh-prod.onrender.com');
 const { User } = require('../src/models/User');
 const readline = require('readline');
 
@@ -17,72 +18,67 @@ mongoose
   })
   .catch((error) => console.error('MongoDB connection error:', error));
 
-let username = '';
+
 
 // START LISTENER
 socket.on('start', () => {
 
-  inquirer.prompt({
-    name: 'username',
-    type: 'input',
-    message: 'Log in with username:',
-  })
+  inquirer.prompt([
+    {
+      name: 'username',
+      type: 'input',
+      message: 'Log in with username:',
+    },
+
+    {
+      name: 'password',
+      type: 'password',
+      message: 'Enter your password:',
+    },
+  ])
+
     .then((answer) => {
-      const enteredUsername = answer.username;
-      // Check if username exists in the database
-      User.findOne({ name: enteredUsername }).exec()
-        .then((user) => {
-          if (user) {
-            inquirer.prompt({
-              name: 'password',
-              type: 'password',
-              message: 'Enter your password:',
-            })
-              .then((answer) => {
-                const enteredPassword = answer.password;
-                // Compare the entered password with the password in the database
-                if (enteredPassword === user.password) {
-                  username = user.name;
-                  socket.emit('login', username);
-                } else {
-                  console.log('Incorrect password');
-                }
-              });
-          } else {
-            console.log('Username not found');
-            inquirer.prompt([
-              {
-                name: 'signupUsername',
-                type: 'input',
-                message: 'Create a username:',
-              },
-              {
-                name: 'signupPassword',
-                type: 'password',
-                message: 'New password',
-              },
-            ])
-              .then((answer) => {
-                const newUsername = answer.signupUsername;
-                const newPassword = answer.signupPassword;
-                // Create a new user in the database
-                const newUser = new User({ name: newUsername, password: newPassword });
-                newUser.save()
-                  .then(() => {
-                    console.log('User created');
-                    socket.emit('login', newUser);
-                  })
-                  .catch((error) => {
-                    console.error('Error creating user:', error);
-                  });
-              });
-          }
-        })
-        .catch((error) => {
-          console.error('Error querying user:', error);
-        });
+      const payload = {
+        username: answer.username,
+        password: answer.password,
+      };
+      socket.emit('login', payload);
     });
 });
+
+
+
+
+socket.on('accessGranted', (payload) => {
+  if (payload.access === true) {
+    socket.emit('leaveChat', payload);
+  } else {
+    inquirer.prompt([
+      {
+        name: 'signupUsername',
+        type: 'input',
+        message: 'Create a username:',
+      },
+      {
+        name: 'signupPassword',
+        type: 'password',
+        message: 'New password',
+      },
+
+    ])
+      .then((answer) => {
+        const newUsername = answer.signupUsername;
+        const newPassword = answer.signupPassword;
+        payload.username = newUsername;
+        payload.password = newPassword;
+        console.log('User created');
+        socket.emit('createUser', payload);
+      });
+  }
+});
+
+
+
 
 // ROOM MENU LISTENER
 socket.on('roomMenu', (payload) => {
@@ -99,7 +95,7 @@ socket.on('roomMenu', (payload) => {
       ],
     },
   ])
-    .then((answer) => {  
+    .then((answer) => {
       const selectedOption = answer.menuChoice;
       payload.room = selectedOption;
       switch (selectedOption) {
@@ -113,7 +109,7 @@ socket.on('roomMenu', (payload) => {
         break;
       case 3:
         console.log('Selected: Play alone');
-        socket.emit('chatJoin', payload); 
+        socket.emit('chatJoin', payload);
         break;
       case 4:
         console.log('Selected: Play with randoms');
@@ -123,7 +119,7 @@ socket.on('roomMenu', (payload) => {
         console.log('Invalid option');
         break;
       }
-      
+
     });
 });
 
@@ -159,7 +155,7 @@ socket.on('dungeonMenu', (payload) => {
         socket.emit('hardD', 'hard');
         break;
       }
-    
+
     });
 });
 
@@ -170,7 +166,9 @@ socket.on('chatMessage', (message) => {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
+    prompt: '> ',
   });
+  rl.prompt();
 
   const sendMessage = () => {
     rl.question('Enter message (or type "exit" to quit): ', (inputMessage) => {
@@ -179,21 +177,64 @@ socket.on('chatMessage', (message) => {
         socket.emit('roomMenu');
         return;
       }
-      socket.emit('sendMessage', { sender: username, message: inputMessage });
+      socket.emit('stopTyping', message.username);
+      socket.emit('sendMessage', { sender: message.username, message: inputMessage });
       sendMessage();
+      rl.prompt();
     });
   };
 
   sendMessage();
 });
 
+// const rl = readline.createInterface({
+//   input: process.stdin,
+//   output: process.stdout,
+//   prompt: '> ',
+// });
+
+// socket.on('chatMessage', (payload) => {
+//   console.log(payload.message);
+
+//   rl.prompt();
+
+//   const sendMessage = (payload) => {
+//     rl.question('Enter message (or type "exit" to quit): ', (inputMessage) => {
+//       if (inputMessage.toLowerCase() === 'exit') {
+//         rl.close();
+//         socket.emit('roomMenu', payload);
+//         return;
+//       }
+//       payload.message = inputMessage;
+//       socket.emit('stopTyping', payload);
+//       socket.emit('sendMessage', username);
+//       sendMessage(payload);
+//       rl.prompt();
+//     });
+//   };
+
+//   sendMessage();
+// });
+
+// process.stdin.on('keypress', (payload) => {
+//   socket.emit('typing', payload);
+// });
+// socket.on('typing', (payload) => {
+//   console.log(`${payload.username} is typing...`);
+// });
+// socket.on('stopTyping', (payload) => {
+//   readline.clearLine(process.stdout, 0);
+//   readline.cursorTo(process.stdout, 0, null);
+//   rl.prompt();
+// });
+
 // SENDING MESSAGES LISTENER
-socket.on('sendMessage', (data) => {
-  const { sender, message } = data;
-  const formattedMessage = `${colorGreenLight}${sender.padStart(70)}:${colorReset} ${colorCyan}${message}`;
-  console.log(formattedMessage);
-  socket.emit('chatMessage', { sender, message });
-});
+// socket.on('sendMessage', (data) => {
+//   const { sender, message } = data;
+//   const formattedMessage = `${colorGreenLight}${sender.padStart(70)}:${colorReset} ${colorCyan}${message}`;
+//   console.log(formattedMessage);
+//   socket.emit('chatMessage', { sender, message });
+// });
 
 // CHAT JOIN LISTENER
 // socket.on('chatJoin', (payload) => {
@@ -211,10 +252,10 @@ socket.on('dungeonResults', (payload) => {
     console.log('RESULTS:', payload.result);
     console.log('LOOT:', payload.loot);
   }, 1000);
-  
+
 });
 // End of the dungeons results
 
-const colorReset = '\x1b[0m';
-const colorCyan = '\x1b[36m';
-const colorGreenLight = '\x1b[92m';
+// const colorReset = '\x1b[0m';
+// const colorCyan = '\x1b[36m';
+// const colorGreenLight = '\x1b[92m';
