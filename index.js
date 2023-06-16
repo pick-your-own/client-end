@@ -1,22 +1,11 @@
 'use strict';
 
-https://dh-prod.onrender.com
+//https://dh-prod.onrender.com
 require('dotenv').config({ path: '../.env' });
 const io = require('socket.io-client');
 const inquirer = require('inquirer');
-const mongoose = require('mongoose');
 const socket = io('https://dh-prod.onrender.com');
-// const { User } = require('../src/models/User');
 const readline = require('readline');
-
-// mongoose
-//   .connect(process.env.MONGODB_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-//   .then(() => {
-//     console.log('Connected to MongoDB');
-//   })
-//   .catch((error) => console.error('MongoDB connection error:', error));
-
-
 
 // START LISTENER
 socket.on('start', () => {
@@ -75,9 +64,6 @@ socket.on('accessGranted', (payload) => {
   }
 });
 
-
-
-
 // ROOM MENU LISTENER
 socket.on('roomMenu', (payload) => {
   inquirer.prompt([
@@ -97,25 +83,25 @@ socket.on('roomMenu', (payload) => {
       const selectedOption = answer.menuChoice;
       payload.room = selectedOption;
       switch (selectedOption) {
-        case 1:
-          console.log('Selected: Chat');
-          socket.emit('chatJoin', payload);
-          break;
-        case 2:
-          console.log('Selected: Play with friends');
-          socket.emit('chatJoin', payload);
-          break;
-        case 3:
-          console.log('Selected: Play alone');
-          socket.emit('chatJoin', payload);
-          break;
-        case 4:
-          console.log('Selected: Play with randoms');
-          socket.emit('chatJoin', payload);
-          break;
-        default:
-          console.log('Invalid option');
-          break;
+      case 1:
+        console.log('Selected: Chat');
+        socket.emit('chatJoin', payload);
+        break;
+      case 2:
+        console.log('Selected: Play with friends');
+        socket.emit('chatJoin', payload);
+        break;
+      case 3:
+        console.log('Selected: Play alone');
+        socket.emit('chatJoin', payload);
+        break;
+      case 4:
+        console.log('Selected: Play with randoms');
+        socket.emit('chatJoin', payload);
+        break;
+      default:
+        console.log('Invalid option');
+        break;
       }
 
     });
@@ -140,28 +126,22 @@ socket.on('dungeonMenu', (payload) => {
       const selectedOption = answer.dungeonOptions;
       payload.mode = selectedOption;
       switch (selectedOption) {
-        case 1:
-          console.log('Selected easy');
-          socket.emit('dungeonLogic', payload);
-          break;
-        case 2:
-          console.log('Selected normal');
-          socket.emit('dungeonLogic', 'normal');
-          break;
-        case 3:
-          console.log('Selected hard');
-          socket.emit('hardD', 'hard');
-          break;
+      case 1:
+        console.log('Selected easy');
+        socket.emit('dungeonLogic', payload);
+        break;
+      case 2:
+        console.log('Selected normal');
+        socket.emit('dungeonLogic', payload);
+        break;
+      case 3:
+        console.log('Selected hard');
+        socket.emit('dungeonLogic', payload);
+        break;
       }
 
     });
 });
-
-// CHAT MESSAGE LISTENER
-// socket.emit('stopTyping', message.username);
-
-
-
 
 socket.on('chatMessage', (message) => {
   console.log(message.message);
@@ -189,101 +169,11 @@ socket.on('chatMessage', (message) => {
   sendMessage();
 });
 
-// const rl = readline.createInterface({
-//   input: process.stdin,
-//   output: process.stdout,
-//   prompt: '> ',
-// });
-
-// socket.on('chatMessage', (message) => {
-//   console.log(message.sender, message.message);
-//   sendMessage(message);
-// });
-
-// const sendMessage = (message) => {
-//   rl.question('Enter message (or type "exit" to quit): ', (inputMessage) => {
-//     if (inputMessage.toLowerCase() === 'exit') {
-//       rl.close();
-//       socket.emit('leaveChat', message);
-//       return;
-//     }
-//     socket.emit('sendMessage', { sender: message, message: inputMessage });
-//     rl.prompt();
-//   });
-// };
-
-
-// });
-
-// const rl = readline.createInterface({
-//   input: process.stdin,
-//   output: process.stdout,
-//   prompt: '> ',
-// });
-
-// socket.on('chatMessage', (payload) => {
-//   console.log(payload.message);
-
-//   rl.prompt();
-
-//   const sendMessage = (payload) => {
-//     rl.question('Enter message (or type "exit" to quit): ', (inputMessage) => {
-//       if (inputMessage.toLowerCase() === 'exit') {
-//         rl.close();
-//         socket.emit('roomMenu', payload);
-//         return;
-//       }
-//       payload.message = inputMessage;
-//       socket.emit('stopTyping', payload);
-//       socket.emit('sendMessage', username);
-//       sendMessage(payload);
-//       rl.prompt();
-//     });
-//   };
-
-//   sendMessage();
-// });
-
-// process.stdin.on('keypress', (payload) => {
-//   socket.emit('typing', payload);
-// });
-// socket.on('typing', (payload) => {
-//   console.log(`${payload.username} is typing...`);
-// });
-// socket.on('stopTyping', (payload) => {
-//   readline.clearLine(process.stdout, 0);
-//   readline.cursorTo(process.stdout, 0, null);
-//   rl.prompt();
-// });
-
-// SENDING MESSAGES LISTENER
-// socket.on('sendMessage', (data) => {
-//   const { sender, message } = data;
-//   const formattedMessage = `${colorGreenLight}${sender.padStart(70)}:${colorReset} ${colorCyan}${message}`;
-//   console.log(formattedMessage);
-//   socket.emit('chatMessage', { sender, message });
-// });
-
-// CHAT JOIN LISTENER
-// socket.on('chatJoin', (payload) => {
-//   console.log(payload);
-// });
-
-// ROOM JOIN SUCCESS
-
-
-// dungeons results from the functions after completion will bring you back to the menu
-
 socket.on('dungeonResults', (payload) => {
   setTimeout(() => {
     console.log('STORY:', payload.story);
     console.log('RESULTS:', payload.result);
     console.log('LOOT:', payload.loot);
   }, 1000);
-  socket.emit('');
+  socket.emit('dungeonFinish', payload);
 });
-// End of the dungeons results
-
-// const colorReset = '\x1b[0m';
-// const colorCyan = '\x1b[36m';
-// const colorGreenLight = '\x1b[92m';
