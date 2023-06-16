@@ -109,7 +109,6 @@ socket.on('roomMenu', (payload) => {
 
 // DUNGEON MENU LISTENER
 socket.on('dungeonMenu', (payload) => {
-  console.log('======>', payload);
   inquirer.prompt([
     {
       name: 'dungeonOptions',
@@ -180,5 +179,7 @@ socket.on('dungeonResults', (payload) => {
     console.log('RESULTS:', payload.result);
     console.log('LOOT:', payload.loot);
   }, 1000);
-  socket.emit('dungeonFinish', payload);
+  setTimeout(() => {
+    socket.emit('dungeonFinish', payload);
+  }, 2000);
 });
